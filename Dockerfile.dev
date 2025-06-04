@@ -1,0 +1,16 @@
+# Use Bun official image
+FROM oven/bun:1.2.5
+
+WORKDIR /app
+
+# Copy and install dependencies
+COPY bun.lock package.json ./
+RUN bun install
+
+# Copy source
+COPY . .
+
+EXPOSE 3000
+
+# Start in dev mode
+CMD ["bun", "run", "start:dev"]
