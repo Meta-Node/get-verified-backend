@@ -30,6 +30,7 @@ export class GistService {
     const response = await firstValueFrom(
       this.httpService.post(url, body, { headers }),
     )
+
     return response.data
   }
 

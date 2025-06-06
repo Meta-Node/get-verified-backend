@@ -2,19 +2,22 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as crypto from 'crypto'
 import { GistService } from './gist.service'
-import db from 'src/lib/db'
 import { usersTable } from 'src/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { DrizzleService } from 'src/lib/db/drizzle.service'
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly configService: ConfigService,
     private readonly gistService: GistService,
+    private readonly dbService: DrizzleService,
   ) {}
 
-  async login(email: string) {
+  async login(email: string, integration: string) {
     const hashedEmail = this.hashContactInfo(email)
+
+    const db = this.dbService.getDb()
 
     const res = await db
       .select()
@@ -24,7 +27,12 @@ export class UsersService {
     if (!res.length) {
       const brightId = this.createBrightId(email)
 
-      await db.insert(usersTable).values({ email: hashedEmail, id: brightId })
+      await db.insert(usersTable).values({
+        email: hashedEmail,
+        id: brightId,
+        integrations: [integration],
+      })
+
       await this.shareInformation(brightId, email)
 
       return brightId
@@ -71,14 +79,16 @@ export class UsersService {
     return crypto
       .createHmac('sha256', secretKey)
       .update(contactInfo)
-      .digest('hex')
+      .digest('base64')
+      .slice(0, 43)
   }
 
   private createBrightId(email: string) {
     const secretKey = this.configService.getOrThrow('SECRET_KEY')
 
-    const hash = crypto.scryptSync(email, secretKey, 32).toString('hex')
-
-    return hash
+    return crypto
+      .scryptSync(email, secretKey, 32)
+      .toString('base64')
+      .slice(0, 43)
   }
 }

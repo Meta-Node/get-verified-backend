@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
 
-export class LoginDto {
+export class ShareDto {
   @ApiProperty()
-  email: string
+  brightId: string
 
   @ApiProperty()
-  integration: string
+  contactInfo: string
 }

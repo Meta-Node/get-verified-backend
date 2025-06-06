@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common'
 import { CONTROLLERS } from './controllers'
 import { PROVIDERS } from './providers'
+import { DrizzleService } from 'src/lib/db/drizzle.service'
 
 @Module({
   controllers: [...CONTROLLERS],
-  providers: [...PROVIDERS],
+  providers: [...PROVIDERS, DrizzleService],
 })
 export class UsersModule {}
