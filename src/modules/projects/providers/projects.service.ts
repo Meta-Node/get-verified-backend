@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { eq } from 'drizzle-orm'
-import { DrizzleService } from 'src/lib/db/drizzle.service'
-import { projectsTable } from 'src/lib/db/schema'
+import { DrizzleService } from 'lib/db/drizzle.service'
+import { projectsTable } from 'lib/db/schema'
 
 @Injectable()
 export class ProjectsService {

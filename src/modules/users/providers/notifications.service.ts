@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { DrizzleService } from 'src/lib/db/drizzle.service'
-import { notificationsTable } from 'src/lib/db/schema'
+import { DrizzleService } from 'lib/db/drizzle.service'
+import { notificationsTable } from 'lib/db/schema'
 
 @Injectable()
 export class NotificationsService {

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { CONTROLLERS } from './controllers'
 import { PROVIDERS } from './providers'
-import { DrizzleService } from 'src/lib/db/drizzle.service'
+import { DrizzleService } from 'lib/db/drizzle.service'
 
 @Module({
   controllers: [...CONTROLLERS],
