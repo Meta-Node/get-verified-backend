@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as crypto from 'crypto'
 import { GistService } from './gist.service'
-import { usersTable } from '@/lib/db/schema'
+import { usersTable } from '../../../lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { DrizzleService } from '@/lib/db/drizzle.service'
+import { DrizzleService } from '../../../lib/db/drizzle.service'
 
 @Injectable()
 export class UsersService {
