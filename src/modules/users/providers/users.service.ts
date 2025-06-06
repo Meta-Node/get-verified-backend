@@ -1,25 +1,84 @@
 import { Injectable } from '@nestjs/common'
-import { randomBytes, scryptSync } from 'crypto'
-
-const generateSaltAndHash = (email: string): { salt: string; hash: string } => {
-  const salt = randomBytes(32).toString('hex') // 32-byte random salt
-  const hash = scryptSync(email, salt, 32).toString('hex') // 32-byte hash
-  return { salt, hash }
-}
+import { ConfigService } from '@nestjs/config'
+import * as crypto from 'crypto'
+import { GistService } from './gist.service'
+import db from 'src/lib/db'
+import { usersTable } from 'src/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 @Injectable()
 export class UsersService {
-  constructor() {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly gistService: GistService,
+  ) {}
 
   async login(email: string) {
-    return { email }
+    const hashedEmail = this.hashContactInfo(email)
+
+    const res = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, hashedEmail))
+
+    if (!res.length) {
+      const brightId = this.createBrightId(email)
+
+      await db.insert(usersTable).values({ email: hashedEmail, id: brightId })
+      await this.shareInformation(brightId, email)
+
+      return brightId
+    }
+
+    return res[0].id
   }
 
-  async hashTable() {
-    // Example usage
-    const email = 'user@example.com'
-    const { salt, hash } = generateSaltAndHash(email)
-    console.log('Salt (store securely):', salt)
-    console.log('Hashed email:', hash)
+  async queryContacts(contacts: string[]) {
+    const hashedContacts = contacts.map((contact) =>
+      this.hashContactInfo(contact),
+    )
+
+    const res = []
+
+    for (const contact of hashedContacts) {
+      const gist = await this.gistService.getGist(contact)
+      if (gist) {
+        res.push(gist)
+      }
+    }
+
+    return res
+  }
+
+  async shareInformation(brightId: string, contactInfo: string) {
+    const hashedEmail = this.hashContactInfo(contactInfo)
+
+    const filename = `${hashedEmail}.json`
+
+    const content = JSON.stringify({ id: brightId })
+
+    await this.gistService.createGist(
+      content,
+      filename,
+      'aura contact information',
+      true,
+    )
+  }
+
+  private hashContactInfo(contactInfo: string): string {
+    const secretKey = this.configService.getOrThrow('SECRET_KEY')
+
+    return crypto
+      .createHmac('sha256', secretKey)
+      .update(contactInfo)
+      .digest('hex')
+  }
+
+  private createBrightId(email: string) {
+    const secretKey = this.configService.getOrThrow('SECRET_KEY')
+
+    const hash = crypto.scryptSync(email, secretKey, 32).toString('hex')
+
+    return hash
   }
 }

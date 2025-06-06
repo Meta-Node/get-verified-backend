@@ -11,4 +11,17 @@ export class UsersController {
   async login(@Body() email: string) {
     return this.usersService.login(email)
   }
+
+  @Post('share')
+  async share(
+    @Body()
+    { brightId, contactInfo }: { brightId: string; contactInfo: string },
+  ) {
+    return this.usersService.shareInformation(brightId, contactInfo)
+  }
+
+  @Post('query-contacts')
+  async queryContacts(@Body() contacts: string[]) {
+    return this.usersService.queryContacts(contacts)
+  }
 }
