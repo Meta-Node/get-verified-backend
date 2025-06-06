@@ -35,10 +35,14 @@ export class UsersService {
 
       await this.shareInformation(brightId, email)
 
-      return brightId
+      return {
+        id: brightId,
+      }
     }
 
-    return res[0].id
+    return {
+      id: res[0].id,
+    }
   }
 
   async queryContacts(contacts: string[]) {

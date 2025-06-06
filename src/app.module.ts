@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
-import { UsersModule } from './modules/users/users.module'
 import { ConfigModule } from '@nestjs/config'
 import { HttpModule } from '@nestjs/axios'
+import { BaseModule } from './modules'
 
 @Module({
   imports: [
-    UsersModule,
+    BaseModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

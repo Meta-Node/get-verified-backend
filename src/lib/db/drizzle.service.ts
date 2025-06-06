@@ -5,16 +5,20 @@ import { drizzle, NeonHttpDatabase } from 'drizzle-orm/neon-http'
 
 @Injectable()
 export class DrizzleService {
-  private readonly db: NeonHttpDatabase<Record<string, never>> & {
+  private readonly _db: NeonHttpDatabase<Record<string, never>> & {
     $client: NeonQueryFunction<any, any>
+  }
+
+  public get db() {
+    return this._db
   }
 
   constructor(private configService: ConfigService) {
     const databaseUrl = this.configService.get<string>('DATABASE_URL')
-    this.db = drizzle(databaseUrl)
+    this._db = drizzle(databaseUrl)
   }
 
   getDb() {
-    return this.db
+    return this._db
   }
 }
