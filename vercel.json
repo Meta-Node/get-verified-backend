@@ -2,17 +2,16 @@
   "version": 2,
   "installCommand": "bun install",
   "buildCommand": "bun run build",
-  "outputDirectory": "dist",
   "builds": [
     {
-      "src": "src/main.js",
+      "src": "dist/src/main.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "src/main.js",
+      "dest": "dist/src/main.js",
       "methods": [
         "GET",
         "POST",
