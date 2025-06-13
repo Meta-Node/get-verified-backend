@@ -10,25 +10,23 @@ import { DrizzleService } from '../../../lib/db/drizzle.service'
 export class UsersService {
   constructor(
     private readonly configService: ConfigService,
-    private readonly gistService: GistService,
     private readonly dbService: DrizzleService,
   ) {}
 
   async login(email: string, integration: string) {
-    const hashedEmail = this.hashContactInfo(email)
+    const hashedEmail = this.createBrightId(email)
 
     const db = this.dbService.getDb()
 
     const res = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, hashedEmail))
+      .where(eq(usersTable.id, hashedEmail))
 
     if (!res.length) {
       const brightId = this.createBrightId(email)
 
       await db.insert(usersTable).values({
-        email: hashedEmail,
         id: brightId,
         integrations: [integration],
       })
@@ -47,10 +45,12 @@ export class UsersService {
 
   async queryContacts(contacts: string[]) {
     const hashedContacts = contacts.map((contact) =>
-      this.hashContactInfo(contact),
+      this.createBrightId(contact),
     )
 
     const res = []
+
+    // this.dbService.db.
 
     for (const contact of hashedContacts) {
       const gist = await this.gistService.getGist(contact)

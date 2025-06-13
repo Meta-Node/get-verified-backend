@@ -8,10 +8,16 @@ import {
 } from 'drizzle-orm/pg-core'
 
 export const usersTable = pgTable('users', {
-  id: varchar({ length: 43 }),
-  email: varchar({ length: 255 }).notNull().unique(),
+  id: varchar({ length: 43 }).notNull().primaryKey(),
   createdAt: timestamp().defaultNow(),
   integrations: varchar({ length: 255 }).notNull().array().default([]),
+})
+
+export const contactsTable = pgTable('contacts', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar({ length: 43 }).notNull(),
+  contactId: varchar({ length: 43 }).notNull(),
+  createdAt: timestamp().defaultNow(),
 })
 
 export const notificationsTable = pgTable('notifications', {
