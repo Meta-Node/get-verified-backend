@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as crypto from 'crypto'
-import { GistService } from './gist.service'
-import { usersTable } from '../../../lib/db/schema'
-import { eq } from 'drizzle-orm'
+import {
+  contactsTable,
+  notificationsTable,
+  usersTable,
+} from '../../../lib/db/schema'
+import { desc, eq, inArray } from 'drizzle-orm'
 import { DrizzleService } from '../../../lib/db/drizzle.service'
 
 @Injectable()
@@ -12,6 +15,23 @@ export class UsersService {
     private readonly configService: ConfigService,
     private readonly dbService: DrizzleService,
   ) {}
+
+  async getNotifications(toUserId: string) {
+    const notifications = await this.dbService.db
+      .select()
+      .from(notificationsTable)
+      .where(eq(notificationsTable.toUserId, toUserId))
+      .orderBy(desc(notificationsTable.createdAt))
+      .limit(100)
+      .execute()
+
+    return notifications.map((notification) => ({
+      id: notification.id,
+      fromUserId: notification.fromUserId,
+      message: notification.message,
+      createdAt: notification.createdAt,
+    }))
+  }
 
   async login(email: string, integration: string) {
     const hashedEmail = this.createBrightId(email)
@@ -48,43 +68,35 @@ export class UsersService {
       this.createBrightId(contact),
     )
 
-    const res = []
+    const users = await this.dbService.db
+      .select()
+      .from(contactsTable)
+      .where(inArray(contactsTable.contactId, hashedContacts))
 
-    // this.dbService.db.
+    const notifications = users.map((user) => ({
+      toUserId: user.userId,
+      fromUserId: user.contactId,
+      message: 'A contact viewed your profile',
+      createdAt: new Date(),
+    }))
 
-    for (const contact of hashedContacts) {
-      const gist = await this.gistService.getGist(contact)
-      if (gist) {
-        res.push(gist)
-      }
-    }
+    await this.dbService.db.insert(notificationsTable).values(notifications)
 
-    return res
+    return users.map((user) => user.id)
   }
 
   async shareInformation(brightId: string, contactInfo: string) {
-    const hashedEmail = this.hashContactInfo(contactInfo)
+    const hashedEmail = this.createBrightId(contactInfo)
 
-    const filename = `${hashedEmail}.json`
+    await this.dbService.db.insert(contactsTable).values({
+      userId: brightId,
+      contactId: hashedEmail,
+      createdAt: new Date(),
+    })
 
-    const content = JSON.stringify({ id: brightId })
-
-    await this.gistService.createGist(
-      content,
-      filename,
-      'aura contact information',
-      true,
-    )
-  }
-
-  private hashContactInfo(contactInfo: string): string {
-    const secretKey = this.configService.getOrThrow('SECRET_KEY')
-
-    return crypto
-      .createHmac('sha256', secretKey)
-      .update(contactInfo)
-      .digest('base64')
-      .slice(0, 43)
+    return {
+      message: 'Contact information shared successfully',
+    }
   }
 
   private createBrightId(email: string) {

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query } from '@nestjs/common'
 import { UsersService } from '../providers'
 import { LoginDto, ShareDto } from '../dto'
 import { ContactsDto } from '../dto/contacts.dto'
@@ -8,6 +8,14 @@ import { ContactsDto } from '../dto/contacts.dto'
 })
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('notifications')
+  async getNotifications(@Query('userId') userId: string) {
+    if (!userId) {
+      throw new Error('User ID is required')
+    }
+    return this.usersService.getNotifications(userId)
+  }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
