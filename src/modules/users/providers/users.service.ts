@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import * as crypto from 'crypto'
-import {
-  contactsTable,
-  notificationsTable,
-  usersTable,
-} from '../../../lib/db/schema'
-import { desc, eq, inArray } from 'drizzle-orm'
+import { notificationsTable, usersTable } from '../../../lib/db/schema'
+import { desc, eq } from 'drizzle-orm'
 import { DrizzleService } from '../../../lib/db/drizzle.service'
 
 @Injectable()
@@ -51,8 +47,6 @@ export class UsersService {
         integrations: [integration],
       })
 
-      await this.shareInformation(brightId, email)
-
       return {
         id: brightId,
       }
@@ -63,45 +57,8 @@ export class UsersService {
     }
   }
 
-  async queryContacts(contacts: string[]) {
-    const hashedContacts = contacts.map((contact) =>
-      this.createBrightId(contact),
-    )
-
-    const users = await this.dbService.db
-      .select()
-      .from(contactsTable)
-      .where(inArray(contactsTable.contactId, hashedContacts))
-
-    const notifications = users.map((user) => ({
-      toUserId: user.userId,
-      fromUserId: user.contactId,
-      message: 'A contact viewed your profile',
-      createdAt: new Date(),
-    }))
-
-    await this.dbService.db.insert(notificationsTable).values(notifications)
-
-    return users.map((user) => user.id)
-  }
-
-  async shareInformation(brightId: string, contactInfo: string) {
-    const hashedEmail = this.createBrightId(contactInfo)
-
-    await this.dbService.db.insert(contactsTable).values({
-      userId: brightId,
-      contactId: hashedEmail,
-      createdAt: new Date(),
-    })
-
-    return {
-      message: 'Contact information shared successfully',
-    }
-  }
-
   private createBrightId(email: string) {
     const secretKey = this.configService.getOrThrow('SECRET_KEY')
-
     return crypto
       .scryptSync(email, secretKey, 32)
       .toString('base64')

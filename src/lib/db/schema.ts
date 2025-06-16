@@ -13,13 +13,6 @@ export const usersTable = pgTable('users', {
   integrations: varchar({ length: 255 }).notNull().array().default([]),
 })
 
-export const contactsTable = pgTable('contacts', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  userId: varchar({ length: 43 }).notNull(),
-  contactId: varchar({ length: 43 }).notNull(),
-  createdAt: timestamp().defaultNow(),
-})
-
 export const notificationsTable = pgTable('notifications', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   toUserId: varchar({ length: 43 }).notNull(),
